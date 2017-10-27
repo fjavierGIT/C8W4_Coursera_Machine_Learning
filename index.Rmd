@@ -4,22 +4,23 @@ author: "Javier Angoy"
 date: "26 de octubre de 2017"
 output: html_document
 ---
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, cache=TRUE)
 ```
-
 ## Executive Summary 
 
+## Load libraries
+```{r}
+library(caret)
+```
 ## Loading and preprocessing the data
-
 The training data for this project are available here:
 https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv
 The test data are available here:
 https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv
 
 First download data files:
-```{r, include=FALSE, cache=TRUE}
+```{r, echo=TRUE, cache=TRUE}
 if(!file.exists("./data")){
     dir.create("./data")
     fUrlTrain <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
@@ -27,27 +28,87 @@ if(!file.exists("./data")){
     download.file(fUrlTrain, destfile = "./data/TrainData.csv", method = "auto")
     download.file(fUrlTest, destfile = "./data/TestData.csv", method = "auto")
 }
-trainingDF = read.csv("./data/TrainData.csv")
-testingDF = read.csv("./data/TestData.csv")
+rawTrainingDF = read.csv("./data/TrainData.csv",na.strings = c("","NA"))
+rawTestingDF = read.csv("./data/TestData.csv",na.strings = c("","NA"))
 ```
 
+Explore data set:
+```{r}
+head(rawTrainingDF)
+```
 
-## Data Processing
+Our dataset contains 160 variables, being the last column the "classe" variable we are trying to predict. 
+We take a look at "classe", which results in a factor variable with 5 possible values.
+```{r}
+str(rawTrainingDF$classe)
+```
+Second we see that some columns contain a great number of invalid entries (NAs and DIV/0).
 
-### The Model
+Analisis de columnas con más valores inválidos 
 
-### Cross validation
+```{r}
 
+```
+## Feature extraction
+Watching columns with more invalid data, those seem to be the ones starting with "kurtosis_", "skewness_", "amplitude_", "max_", "min_ "var_", "avg_", and "stddev_", because they are not measurements from accelerometers along with "timestamp", "new_window" and "num_window". We will also ignore columns named "X" and "user_name" which wont give information to our model.
+```{r}
+ignoredCols <- grep("kurtosis_|skewness_|amplitude_|max_|min_|var_|avg_|stddev_|X|user_name|timestamp|window", names(rawTrainingDF))
+training <- rawTrainingDF[,-ignoredCols]
+testing <- rawTestingDF[,-ignoredCols]
+str(training)
+```
+
+## Data Processing for Cross Validation
+We will evaluate our model accuracy through cross-validation. We have two datasets, rawTrainingDF and rawTestingDF. The latter (rawTestingDF) will be kept for grading purposes, so we will have to split the training data frame into two data sets in a 80%/20% proportion: training_CV (80%) and testing_CV (20%).
+```{r}
+set.seed(333)
+inTrain <- createDataPartition(y = training$classe, p = 0.8, list = FALSE)
+training_CV <- training[inTrain, ]
+testing_CV <- training[-inTrain, ]
+```
+## Classification Algorithms Selection
+Prepare trainControl function. Set resampling and defaults to "Cross Validation".
+```{r}
+fitControl <- trainControl(method = "cv", number = 5)
+```
+This is a classification problem.
+
+### Linear Discriminant Analysis
+```{r}
+ptm <- proc.time()
+mod1 <- train(classe~., method='lda', data=training_CV, trControl = fitControl)
+mod1
+proc.time() - ptm
+```
+###Random Forest Predictor
+```{r}
+ptm <- proc.time()
+mod2 <- train(classe~., method="rf",data=training_CV,trControl = fitControl)
+mod2
+proc.time() - ptm
+
+```
+###Boosted Predictor (gbm)
+```{r}
+ptm <- proc.time()
+mod3 <- train(classe~.,method="gbm",data=training_CV,verbose=FALSE,trControl=fitControl) 
+mod3
+proc.time() - ptm
+```
+## Cross validation
+###Linear Discriminant Analysis Accuracy
+```{r}
+confusionMatrix(testing_CV$classe, predict(mod1, testing_CV))$overall[1]
+```
+###Random Forest Predictor Accuracy
+```{r}
+confusionMatrix(testing_CV$classe, predict(mod2, testing_CV))$overall[1]
+```
+###Boosted Predictor Accuracy
+```{r}
+confusionMatrix(testing_CV$classe, predict(mod3, testing_CV))$overall[1]
+```
 ### Expected out of sample error
-
+The expected out-of-sample error is estimated at XXXXXXXXXXX. The expected out-of-sample error is calculated as 1 - accuracy for predictions made against the cross-validation set. Our Test data set comprises 20 cases. With an accuracy above XXXXXXXX on our cross-validation data, we can expect that very few, or none, of the test samples will be missclassified.
 ## Conclusions
-
 ## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
