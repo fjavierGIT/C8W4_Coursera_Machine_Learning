@@ -1,23 +1,26 @@
 ---
 title: "Coursera Machine Learning Assignment"
 author: "Javier Angoy"
-date: "26 de octubre de 2017"
+date: "October 28, 2017"
 output: html_document
 ---
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, cache=TRUE)
 ```
 ## Executive Summary 
-
-The purpose of this exercise tries to classificate the data from the Qualitative Activity Recognition of Weight Lifting Exercises study.  The study gathers data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants doing weight lifting exercises and try to determinate the movement performance (better to worst in 5 levels).
-
-The goal for this report will be predict the manner in which they did the exercise. This is the “classe” variable in the dataset.
+The purpose of this exercise is to classificate the data from the Qualitative Activity Recognition of Weight Lifting Exercises study.  The study gathers data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants doing weight lifting exercises and tries to determine the movement performance (with 5 factor levels). So with this report our goal will be to predict the manner in which they did the exercise. This is the “classe” variable in the dataset.
 More information on the “Weight Lifting Exercises Dataset” can be found in the following location:
 http://web.archive.org/web/20161224072740/http:/groupware.les.inf.puc-rio.br/har
+
+A comparison with three models was done: Linear Discriminant Annalysis, Boosting and Random Forests. The best precission achieved was that of the model Random Forest, with a 99.4%, under which we will try to identify 20 test cases with no "classe" data.
+
+Github html version of this exercise can be found on [Coursera Machine Learning Assignment]( http://htmlpreview.github.io/?https://github.com/fjavierGIT/C8W4_Coursera_Machine_Learning/blob/master/index.html).
 
 ## Load libraries
 ```{r}
 library(caret)
+library(parallel)
+library(doParallel)
 ```
 ## Loading and preprocessing the data
 The training data for this project are available here:
@@ -81,13 +84,11 @@ mod1
 proc.time() - ptm
 ```
 ##Random Forest Predictor (rf) (Parallel Processing)
+Parallel package in conjunction with the trainControl() function in caret were used to improve processing time of the execution of the train() function with the Random Forest model.
 ```{r}
-library(parallel)
-library(doParallel)
 ptm <- proc.time()
-x <- training_CV[,-53]
-y <- training_CV[,53]
-cluster <- makeCluster(detectCores() - 1) # convention to leave 1 core for OS
+x <- training_CV[,-53]; y <- training_CV[,53]
+cluster <- makeCluster(detectCores() - 1)
 registerDoParallel(cluster)
 fitControl2 <- trainControl(method = "cv",
                            number = 10,
@@ -120,23 +121,19 @@ confusionMatrix(testing_CV$classe, predict(mod2, testing_CV))$overall[1]
 ```{r}
 confusionMatrix(testing_CV$classe, predict(mod3, testing_CV))$overall[1]
 ```
-We can see that, with an accuracy of 0.966, this model's performance is not better than the one we obtained from Random Forest (0.994). Therefore, we choose Random Forest as the model to be used.
-
 ### Expected out of sample error
 We can calculate the expected out-of-sample error as 1 - accuracy for predictions made against the cross-validation set. An accuracy above 99.43% on our cross-validation data, ensures us an error that is estimated at 0.56%.
-## Conclusions
 
-blablabla
+## Conclusions
+The confusion matrices show that, having a great accuracy of 0.966, Boosting performance is not better than the one we obtained from Random Forest (0.994). The accuracy for the Random Forest model was 0.994 (95% CI: (0.9918, 0.9967)) compared to 0.966 (95% CI: (0.9599, 0.9715)) for Boosting. A simpler Linear Discriminant Analysis scored 0.699 (95% CI: (0.6851, 0.714)). Therefore, we choose Random Forest as the model to be used.
 
 ## Including Plots
 ### Feature plot
-Bet
-Plot with "Total" columns, searching for correlated variables.
+As part of the elementary data exploration, a search for correlated variables was done. Plot with "total" predictors.
 ```{r}
-# plot features
-total <- which(grepl("^total", colnames(training), ignore.case = F))
-totalAccel <- training[, total]
-featurePlot(x = totalAccel, y = training$classe, pch = 19, main = "Feature plot", 
+totalCols <- which(grepl("^total", colnames(training), ignore.case = F))
+totals <- training[, totalCols]
+featurePlot(x = totals, y = training$classe, pch = 19, main = "Total Features plot", 
     plot = "pairs")
 ```
 
@@ -147,13 +144,14 @@ varImpPlot(mod2$finalModel, sort = TRUE, pch = 19, col = 1, cex = 1,
     main = "Principal Components Gini Decrease")
 ```
 ### Random Forest plot
+Plot with the selected classification model.
 ```{r}
 plot(mod2, log = "y", lwd = 2, main = "Random forest accuracy", xlab = "Predictors", 
     ylab = "Accuracy")
 ```
 
 ## Prediction on Test Dataset
-We will now try to predict the 20 different test cases from the original test dataset using the described prediction model, obtaining the following predictions:
+We will now try to classificate the 20 different test cases from the original test dataset using the described model, obtaining the following results:
 ```{r}
 testPrediction <- predict(mod2, newdata = testing)
 testPrediction
