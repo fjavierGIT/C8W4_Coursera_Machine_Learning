@@ -7,9 +7,10 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, cache=TRUE)
 ```
+
 ## Executive Summary 
 The purpose of this exercise is to classificate the data from the Qualitative Activity Recognition of Weight Lifting Exercises study.  The study gathers data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants doing weight lifting exercises and tries to determine the movement performance (with 5 factor levels). So with this report our goal will be to predict the manner in which they did the exercise. This is the “classe” variable in the dataset.
-More information on the “Weight Lifting Exercises Dataset” can be found in the following location:
+More information on the “Weight Lifting Exercises Dataset” can be found on the following location:
 http://web.archive.org/web/20161224072740/http:/groupware.les.inf.puc-rio.br/har
 
 A comparison with three models was done: Linear Discriminant Annalysis, Boosting and Random Forests. The best precission achieved was that of the model Random Forest, with a 99.4%, under which we will try to identify 20 test cases with no "classe" data.
@@ -22,6 +23,7 @@ library(caret)
 library(parallel)
 library(doParallel)
 ```
+
 ## Loading and preprocessing the data
 The training data for this project are available here:
 https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv
@@ -50,6 +52,7 @@ We take a look at "classe", which results in a factor variable with 5 possible v
 ```{r}
 str(rawTrainingDF$classe)
 ```
+
 ## Feature extraction
 Second we see that some columns contain a great number of invalid entries (NAs and DIV/0).
 Watching columns with more invalid data, those seem to be the ones starting with "kurtosis_", "skewness_", "amplitude_", "max_", "min_ "var_", "avg_", and "stddev_". We will ignore them because they are not measurements from accelerometers but summarization data along with "timestamp", "new_window" and "num_window". We will also ignore columns named "X" and "user_name" which wont give information to our model.
@@ -76,6 +79,7 @@ We prepare trainControl function and set resampling default to "Cross Validation
 ```{r}
 fitControl <- trainControl(method = "cv", number = 10)
 ```
+
 ### Linear Discriminant Analysis (lda)
 ```{r}
 ptm <- proc.time()
@@ -83,7 +87,8 @@ mod1 <- train(classe~., method='lda', data=training_CV, trControl = fitControl)
 mod1
 proc.time() - ptm
 ```
-##Random Forest Predictor (rf) (Parallel Processing)
+
+## Random Forest Predictor (rf) (Parallel Processing)
 Parallel package in conjunction with the trainControl() function in caret were used to improve processing time of the execution of the train() function with the Random Forest model.
 ```{r}
 ptm <- proc.time()
@@ -99,28 +104,33 @@ stopCluster(cluster)
 registerDoSEQ()
 proc.time() - ptm
 ```
-###Boosted Predictor (gbm)
+
+### Boosted Predictor (gbm)
 ```{r}
 ptm <- proc.time()
 mod3 <- train(classe~.,method="gbm",data=training_CV,verbose=FALSE,trControl=fitControl) 
 mod3
 proc.time() - ptm
 ```
+
 ## Cross validation
 Confusion matrices were created for the 3 models using the “caret” package.
 
-###Linear Discriminant Analysis Accuracy
+### Linear Discriminant Analysis Accuracy
 ```{r}
 confusionMatrix(testing_CV$classe, predict(mod1, testing_CV))$overall[1]
 ```
-###Random Forest Predictor Accuracy
+
+### Random Forest Predictor Accuracy
 ```{r}
 confusionMatrix(testing_CV$classe, predict(mod2, testing_CV))$overall[1]
 ```
-###Boosted Predictor Accuracy
+
+### Boosted Predictor Accuracy
 ```{r}
 confusionMatrix(testing_CV$classe, predict(mod3, testing_CV))$overall[1]
 ```
+
 ### Expected out of sample error
 We can calculate the expected out-of-sample error as 1 - accuracy for predictions made against the cross-validation set. An accuracy above 99.43% on our cross-validation data, ensures us an error that is estimated at 0.56%.
 
@@ -128,6 +138,7 @@ We can calculate the expected out-of-sample error as 1 - accuracy for prediction
 The confusion matrices show that, having a great accuracy of 0.966, Boosting performance is not better than the one we obtained from Random Forest (0.994). The accuracy for the Random Forest model was 0.994 (95% CI: (0.9918, 0.9967)) compared to 0.966 (95% CI: (0.9599, 0.9715)) for Boosting. A simpler Linear Discriminant Analysis scored 0.699 (95% CI: (0.6851, 0.714)). Therefore, we choose Random Forest as the model to be used.
 
 ## Including Plots
+
 ### Feature plot
 As part of the elementary data exploration, a search for correlated variables was done. Plot with "total" predictors.
 ```{r}
@@ -143,6 +154,7 @@ Relative importance of the resulting principal components of the selected model.
 varImpPlot(mod2$finalModel, sort = TRUE, pch = 19, col = 1, cex = 1, 
     main = "Principal Components Gini Decrease")
 ```
+
 ### Random Forest plot
 Plot with the selected classification model.
 ```{r}
