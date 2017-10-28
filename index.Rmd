@@ -15,7 +15,7 @@ http://web.archive.org/web/20161224072740/http:/groupware.les.inf.puc-rio.br/har
 
 A comparison with three models was done: Linear Discriminant Annalysis, Boosting and Random Forests. The best precission achieved was that of the model Random Forest, with a 99.4%, under which we will try to identify 20 test cases with no "classe" data.
 
-Github html version of this exercise can be found on [Coursera Machine Learning Assignment]( http://htmlpreview.github.io/?https://github.com/fjavierGIT/C8W4_Coursera_Machine_Learning/blob/master/index.html).
+NOTE FOR GRADERS: Github html version of this exercise can be found on [Coursera Machine Learning Assignment]( http://htmlpreview.github.io/?https://github.com/fjavierGIT/C8W4_Coursera_Machine_Learning/blob/master/index.html).
 
 ## Load libraries
 ```{r}

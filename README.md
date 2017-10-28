@@ -1,6 +1,10 @@
 ---
 output: html_document
 ---
+
+# NOTE FOR GRADERS: 
+Github html version of this exercise can be found on [Coursera Machine Learning Assignment]( http://htmlpreview.github.io/?https://github.com/fjavierGIT/C8W4_Coursera_Machine_Learning/blob/master/index.html).
+
 # C8W4_Coursera_Machine_Learning
 Final Assignment for Practical Machine Learning Course
 
