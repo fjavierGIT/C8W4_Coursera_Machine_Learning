@@ -22,6 +22,7 @@ NOTE FOR GRADERS: Github html version of this exercise can be found on [Coursera
 library(caret)
 library(parallel)
 library(doParallel)
+library(randomForest)
 ```
 
 ## Loading and preprocessing the data
